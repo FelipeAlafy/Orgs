@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filter
+import android.util.Log
 import kotlinx.coroutines.flow.update
 import net.felipealafy.orgs.views.Views
 
@@ -21,6 +23,7 @@ class OrgsViewModel : ViewModel() {
     val urlTextInput: StateFlow<String> = _urlTextInput
     val descriptionTextInput: StateFlow<String> = _descriptionTextInput
     val valueTextInput: StateFlow<String> = _valueTextInput
+    val currentProduct: StateFlow<Product> = _currentProduct
 
     fun addProduct() {
         val newProduct = getProduct()
@@ -102,6 +105,12 @@ class OrgsViewModel : ViewModel() {
             SwipeToDismissBoxValue.Settled -> {
                 false
             }
+        }
+    }
+
+    fun selectProduct(product: Product) {
+        _currentProduct.update {
+            product
         }
     }
 }
