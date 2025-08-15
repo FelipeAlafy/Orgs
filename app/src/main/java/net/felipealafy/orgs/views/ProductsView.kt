@@ -1,5 +1,6 @@
 package net.felipealafy.orgs.views
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -15,6 +17,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -23,12 +27,16 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -44,8 +52,10 @@ import net.felipealafy.orgs.Product
 import net.felipealafy.orgs.R
 import net.felipealafy.orgs.ui.theme.DarkGray
 import net.felipealafy.orgs.ui.theme.Green
+import net.felipealafy.orgs.ui.theme.LightBlue
 import net.felipealafy.orgs.ui.theme.LightGray
 import net.felipealafy.orgs.ui.theme.OrgsTypography
+import net.felipealafy.orgs.ui.theme.Red
 import net.felipealafy.orgs.ui.theme.White
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -106,7 +116,13 @@ fun ProductsView(
                     modifier = Modifier.padding(8.dp)
                 ) {
                     items(productsList) { product ->
-                        ProductCard(product = product)
+                        SwipeActionsForProductCard(product, swipeActions = {
+                            swipeAction -> viewModel.swipeActions(
+                                product,
+                                swipeAction,
+                                navController
+                            )
+                        })
                     }
                 }
             }
@@ -121,9 +137,56 @@ fun ProductsView(
 }
 
 @Composable
+fun SwipeActionsForProductCard(product: Product, swipeActions: (SwipeToDismissBoxValue) -> Boolean) {
+
+    val swipeToDismissBoxState = rememberSwipeToDismissBoxState(
+        confirmValueChange = swipeActions
+    )
+
+    SwipeToDismissBox(
+        state = swipeToDismissBoxState,
+        modifier = Modifier.fillMaxSize(),
+        backgroundContent = {
+            when (swipeToDismissBoxState.dismissDirection) {
+                SwipeToDismissBoxValue.StartToEnd -> {
+                    Icon(
+                        imageVector = Icons.Filled.Edit,
+                        contentDescription = stringResource(R.string.edit_button),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(LightBlue)
+                            .wrapContentSize(Alignment.CenterStart)
+                            .padding(12.dp),
+                        tint = White
+                    )
+                }
+                SwipeToDismissBoxValue.EndToStart -> {
+                    Icon(
+                        imageVector = Icons.Filled.Delete,
+                        contentDescription = stringResource(R.string.edit_button),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Red)
+                            .wrapContentSize(Alignment.CenterEnd)
+                            .padding(12.dp),
+                        tint = White
+                    )
+                }
+                SwipeToDismissBoxValue.Settled -> {}
+            }
+        }
+    ) {
+        ProductCard(product)
+    }
+}
+
+@Composable
 fun ProductCard(product: Product) {
     Card (
-        modifier = Modifier.fillMaxWidth().padding(8.dp).height(150.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .height(150.dp),
         shape = RoundedCornerShape(8.dp),
         elevation = CardDefaults.cardElevation(8.dp),
         colors = CardDefaults.cardColors(containerColor = White)

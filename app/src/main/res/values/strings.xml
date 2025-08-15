@@ -9,4 +9,5 @@
     <string name="product_url">Image Url</string>
     <string name="product_value">Price</string>
     <string name="back_arrow">Click here to go to previous screen</string>
+    <string name="edit_button">Swipe from start to end to edit this product.</string>
 </resources>
