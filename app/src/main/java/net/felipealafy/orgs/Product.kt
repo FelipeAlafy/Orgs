@@ -8,6 +8,6 @@ import androidx.compose.runtime.setValue
 data class Product(val id: Int = 0) {
     var name by mutableStateOf("")
     var descripton by mutableStateOf("")
-    var value by mutableFloatStateOf(0F)
+    var value by mutableStateOf("")
     var urlImage by mutableStateOf("")
 }

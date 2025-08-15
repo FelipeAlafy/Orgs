@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -25,6 +27,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -36,6 +39,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
+import net.felipealafy.orgs.OrgsViewModel
 import net.felipealafy.orgs.Product
 import net.felipealafy.orgs.R
 import net.felipealafy.orgs.ui.theme.DarkGray
@@ -47,8 +51,10 @@ import net.felipealafy.orgs.ui.theme.White
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductsView(
-    navController: NavHostController = rememberNavController()
+    navController: NavHostController = rememberNavController(),
+    viewModel: OrgsViewModel,
 ) {
+    val productsList by viewModel.productsList.collectAsState()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentScreen = Views.valueOf(
         backStackEntry?.destination?.route ?: Views.Products.name
@@ -96,20 +102,19 @@ fun ProductsView(
             modifier = Modifier.padding(innerPadding)
         ) {
             composable (route = Views.Products.name) {
-                Column(
+                LazyColumn(
                     modifier = Modifier.padding(8.dp)
                 ) {
-                    val product = Product(id = 1).apply {
-                        name = "Pack of Orange"
-                        descripton = "this pack contains about 300G of Orange"
-                        value = 12.99F
-                        urlImage = "https://i5.walmartimages.com/asr/35e5e43b-d7f7-4c05-ad55-d2df5404c1cd_1.8a8b9be88694f526967d6d5b24c78bae.jpeg"
+                    items(productsList) { product ->
+                        ProductCard(product = product)
                     }
-                    ProductCard(product)
                 }
             }
             composable(route = Views.Register.name) {
-                RegisterView(navController= navController)
+                RegisterView(
+                    navController= navController,
+                    viewModel = viewModel
+                )
             }
         }
     }
