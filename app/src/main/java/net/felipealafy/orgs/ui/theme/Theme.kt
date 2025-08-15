@@ -52,7 +52,7 @@ fun OrgsTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = OrgsTypography,
         content = content
     )
 }
