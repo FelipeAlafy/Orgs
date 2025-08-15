@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">Orgs</string>
+    <string name="add_button">Click here to add a product</string>
+    <string name="currency_unit">US$</string>
+    <string name="product_image">This is an image of the product.</string>
+    <string name="save_button">save item</string>
+    <string name="product_name">Name</string>
+    <string name="product_description">Description</string>
+    <string name="product_url">Image Url</string>
+    <string name="product_value">Price</string>
+    <string name="back_arrow">Click here to go to previous screen</string>
 </resources>
