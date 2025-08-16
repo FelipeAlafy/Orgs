@@ -2,13 +2,14 @@ package net.felipealafy.orgs
 
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.lifecycle.ViewModel
-import androidx.navigation.NavHostController
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.filter
-import android.util.Log
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
-import net.felipealafy.orgs.views.Views
+import kotlinx.coroutines.launch
+import java.util.UUID
 
 class OrgsViewModel : ViewModel() {
     private val _defaultProduct = Product()
@@ -18,32 +19,52 @@ class OrgsViewModel : ViewModel() {
     private val _urlTextInput = MutableStateFlow("")
     private val _descriptionTextInput = MutableStateFlow("")
     private val _valueTextInput = MutableStateFlow("")
+    private val _navigationEvent = Channel<NavigationEvent>()
+    private var editingProduct: Product? = null
     val productsList: StateFlow<List<Product>> = _productsList
     val nameTextInput: StateFlow<String> = _nameTextInput
     val urlTextInput: StateFlow<String> = _urlTextInput
     val descriptionTextInput: StateFlow<String> = _descriptionTextInput
     val valueTextInput: StateFlow<String> = _valueTextInput
     val currentProduct: StateFlow<Product> = _currentProduct
+    val navigationEvent = _navigationEvent.receiveAsFlow()
 
-    fun addProduct() {
-        val newProduct = getProduct()
+    fun saveProduct() {
+        val productToSave = getProduct()
 
-        _productsList.update { list ->
-            list + newProduct
+        if (editingProduct != null) {
+            _productsList.update { currentList ->
+                currentList.map { productInList ->
+                    if (productInList.id == productToSave.id) {
+                        productToSave
+                    } else {
+                        productInList
+                    }
+                }
+            }
+        } else {
+            _productsList.update { currentList ->
+                currentList + productToSave
+            }
         }
-        _currentProduct.value = _defaultProduct.copy()
-        cleanTextsInput()
+
+        clearSaving()
     }
 
     private fun getProduct() =
         _currentProduct.value.copy(
-            id = _productsList.value.size + 1
-        ).apply {
-            name = nameTextInput.value
-            urlImage = urlTextInput.value
-            descripton = descriptionTextInput.value
+            id = editingProduct?.id ?: UUID.randomUUID().toString(),
+            name = nameTextInput.value,
+            urlImage = urlTextInput.value,
+            descripton = descriptionTextInput.value,
             value = valueTextInput.value
-        }
+        )
+
+    private fun clearSaving() {
+        _currentProduct.value = _defaultProduct.copy()
+        cleanTextsInput()
+        editingProduct = null
+    }
 
     fun cleanTextsInput() {
         _nameTextInput.value = ""
@@ -76,8 +97,8 @@ class OrgsViewModel : ViewModel() {
         }
     }
 
-    fun editProduct(product: Product) {
-        _currentProduct.update { product.copy() }
+    fun startEditMode(product: Product) {
+        editingProduct = product
         _nameTextInput.update { product.name }
         _urlTextInput.update { product.urlImage }
         _descriptionTextInput.update { product.descripton }
@@ -90,18 +111,21 @@ class OrgsViewModel : ViewModel() {
         }
     }
 
-    val swipeActions: (Product, SwipeToDismissBoxValue, navController: NavHostController) -> Boolean = { product, swipeAction, navController ->
+    val swipeActions: (Product, SwipeToDismissBoxValue) -> Boolean = { product, swipeAction ->
         when (swipeAction) {
             SwipeToDismissBoxValue.StartToEnd -> {
-                editProduct(product)
-                removeProduct(product)
-                navController.navigate(Views.Register.name)
-                true
+                startEditMode(product)
+                viewModelScope.launch {
+                    _navigationEvent.send(NavigationEvent.NavigateToRegister)
+                }
+                false
             }
+
             SwipeToDismissBoxValue.EndToStart -> {
                 removeProduct(product)
                 true
             }
+
             SwipeToDismissBoxValue.Settled -> {
                 false
             }
@@ -113,4 +137,9 @@ class OrgsViewModel : ViewModel() {
             product
         }
     }
+}
+
+sealed class NavigationEvent {
+    data object NavigateToRegister : NavigationEvent()
+    data object NavigateUp : NavigationEvent()
 }

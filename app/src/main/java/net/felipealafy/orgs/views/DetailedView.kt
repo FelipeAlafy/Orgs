@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -57,12 +59,13 @@ fun DetailedView(viewModel: OrgsViewModel) {
 
 @Composable
 fun LargerImageViewer(product: Product) {
-    val width = LocalWindowInfo.current.containerSize.width
-
     AsyncImage(
         model = product.urlImage,
         contentDescription = stringResource(R.string.product_image),
-        modifier = Modifier.width(width.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(250.dp),
+        contentScale = ContentScale.Crop
     )
 }
 
