@@ -10,7 +10,11 @@ import net.felipealafy.orgs.ui.theme.OrgsTheme
 import net.felipealafy.orgs.views.ProductsView
 
 class MainActivity : ComponentActivity() {
-    private val viewModel: OrgsViewModel by viewModels()
+    private val viewModel: OrgsViewModel by viewModels {
+        OrgsViewModelFactory(
+            (application as OrgsApplication).database.productDao()
+        )
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
