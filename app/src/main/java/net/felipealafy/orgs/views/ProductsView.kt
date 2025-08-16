@@ -57,6 +57,12 @@ import net.felipealafy.orgs.ui.theme.OrgsTypography
 import net.felipealafy.orgs.ui.theme.Red
 import net.felipealafy.orgs.ui.theme.White
 import android.util.Log
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.layout.ContentScale
+import net.felipealafy.orgs.NavigationEvent
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,6 +75,19 @@ fun ProductsView(
     val currentScreen = Views.valueOf(
         backStackEntry?.destination?.route ?: Views.Products.name
     )
+
+    LaunchedEffect(Unit) {
+        viewModel.navigationEvent.collect { event ->
+            when (event) {
+                is NavigationEvent.NavigateToRegister -> {
+                   navController.navigate(Views.Register.name)
+                }
+                is NavigationEvent.NavigateUp -> {
+                    navController.navigateUp()
+                }
+            }
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -113,16 +132,19 @@ fun ProductsView(
         ) {
             composable (route = Views.Products.name) {
                 LazyColumn(
-                    modifier = Modifier.padding(8.dp)
+                    modifier = Modifier.padding(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    items(productsList) { product ->
+                    items(
+                        items = productsList,
+                        key = { product -> product.id }
+                    ) { product ->
                         SwipeActionsForProductCard(
                             product,
                             swipeActions = { swipeAction ->
-                                viewModel.swipeActions(product, swipeAction, navController)
+                                viewModel.swipeActions(product, swipeAction)
                             },
                             onClick = {
-                                Log.d("DEBUG_ORGS", "1. Card Clicado. Produto: '${product.name}'")
                                 viewModel.selectProduct(product)
                                 navController.navigate(Views.Detailed.name)
                             }
@@ -189,7 +211,6 @@ fun ProductCard(product: Product, onClick: () -> Unit) {
     Card (
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
             .height(150.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(8.dp),
@@ -202,7 +223,9 @@ fun ProductCard(product: Product, onClick: () -> Unit) {
                 Modifier.padding(8.dp)
             ) {
                 ProductName(product)
+                Spacer(modifier = Modifier.weight(1f))
                 ProductDescription(product)
+                Spacer(modifier = Modifier.weight(1f))
                 ProductValue(product)
             }
         }
@@ -214,7 +237,8 @@ fun ProductView(product: Product) {
     AsyncImage(
         model = product.urlImage,
         contentDescription = stringResource(R.string.product_image),
-        modifier = Modifier.size(150.dp)
+        modifier = Modifier.fillMaxHeight().size(150.dp),
+        contentScale = ContentScale.Crop
     )
 }
 
@@ -224,7 +248,6 @@ fun ProductName(product: Product) {
         text = product.name,
         style = OrgsTypography.bodyLarge,
         color = DarkGray,
-        modifier = Modifier.padding(top = 14.dp)
     )
 }
 
@@ -233,8 +256,7 @@ fun ProductDescription(product: Product) {
     Text(
         text = product.descripton,
         style = OrgsTypography.labelSmall,
-        color = LightGray,
-        modifier = Modifier.padding(top = 6.dp)
+        color = LightGray
     )
 }
 
@@ -243,8 +265,7 @@ fun ProductValue(product: Product) {
     Text(
         text = "${stringResource(R.string.currency_unit)} ${product.value}",
         color = Green,
-        style = OrgsTypography.bodyMedium,
-        modifier = Modifier.padding(top = 20.dp)
+        style = OrgsTypography.bodyMedium
     )
 }
 
