@@ -162,6 +162,7 @@ fun ProductsView(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SwipeActionsForProductCard(product: Product, swipeActions: (SwipeToDismissBoxValue) -> Boolean, onClick: () -> Unit) {
 

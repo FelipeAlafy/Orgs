@@ -1,19 +1,23 @@
 package net.felipealafy.orgs
 
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.SwipeToDismissBoxValue
+import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import net.felipealafy.orgs.database.ProductDao
 import java.util.UUID
 
-class OrgsViewModel : ViewModel() {
+class OrgsViewModel(private val dao: ProductDao) : ViewModel() {
     private val _defaultProduct = Product()
-    private val _productsList = MutableStateFlow<List<Product>>(emptyList())
     private val _currentProduct = MutableStateFlow(_defaultProduct.copy())
     private val _nameTextInput = MutableStateFlow("")
     private val _urlTextInput = MutableStateFlow("")
@@ -21,30 +25,26 @@ class OrgsViewModel : ViewModel() {
     private val _valueTextInput = MutableStateFlow("")
     private val _navigationEvent = Channel<NavigationEvent>()
     private var editingProduct: Product? = null
-    val productsList: StateFlow<List<Product>> = _productsList
     val nameTextInput: StateFlow<String> = _nameTextInput
     val urlTextInput: StateFlow<String> = _urlTextInput
     val descriptionTextInput: StateFlow<String> = _descriptionTextInput
     val valueTextInput: StateFlow<String> = _valueTextInput
     val currentProduct: StateFlow<Product> = _currentProduct
     val navigationEvent = _navigationEvent.receiveAsFlow()
+    val productsList: StateFlow<List<Product>> = dao.getAll().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000L),
+        initialValue = emptyList()
+    )
 
     fun saveProduct() {
         val productToSave = getProduct()
 
-        if (editingProduct != null) {
-            _productsList.update { currentList ->
-                currentList.map { productInList ->
-                    if (productInList.id == productToSave.id) {
-                        productToSave
-                    } else {
-                        productInList
-                    }
-                }
-            }
-        } else {
-            _productsList.update { currentList ->
-                currentList + productToSave
+        viewModelScope.launch {
+            if (editingProduct != null) {
+                dao.update(productToSave)
+            } else {
+                dao.insert(productToSave)
             }
         }
 
@@ -52,7 +52,7 @@ class OrgsViewModel : ViewModel() {
     }
 
     private fun getProduct() =
-        _currentProduct.value.copy(
+        Product(
             id = editingProduct?.id ?: UUID.randomUUID().toString(),
             name = nameTextInput.value,
             urlImage = urlTextInput.value,
@@ -106,11 +106,12 @@ class OrgsViewModel : ViewModel() {
     }
 
     fun removeProduct(product: Product) {
-        _productsList.update { list ->
-            list - product
+        viewModelScope.launch {
+            dao.delete(product)
         }
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     val swipeActions: (Product, SwipeToDismissBoxValue) -> Boolean = { product, swipeAction ->
         when (swipeAction) {
             SwipeToDismissBoxValue.StartToEnd -> {
