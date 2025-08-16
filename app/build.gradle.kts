@@ -59,6 +59,7 @@ dependencies {
     implementation(libs.coil.kt)
     implementation(libs.coil.network.okhttp)
     implementation(libs.androidx.navigation.compose)
+    implementation("androidx.activity:activity-ktx:1.9.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

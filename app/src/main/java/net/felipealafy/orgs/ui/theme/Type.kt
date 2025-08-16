@@ -15,6 +15,13 @@ val montserratFamily = FontFamily(fonts= listOf(
 ))
 
 val OrgsTypography = Typography(
+    headlineLarge = TextStyle(
+        fontFamily = montserratFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 28.sp,
+        lineHeight = 24.sp,
+        letterSpacing = 0.5.sp
+    ),
     bodyLarge = TextStyle(
         fontFamily = montserratFamily,
         fontWeight = FontWeight.Bold,
@@ -38,8 +45,8 @@ val OrgsTypography = Typography(
     ),
     bodyMedium = TextStyle(
         fontFamily = montserratFamily,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 22.sp,
+        fontWeight = FontWeight.Medium,
+        fontSize = 24.sp,
         lineHeight = 24.sp,
         letterSpacing = 0.5.sp
     )

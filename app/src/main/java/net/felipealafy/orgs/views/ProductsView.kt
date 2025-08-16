@@ -1,6 +1,7 @@
 package net.felipealafy.orgs.views
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,7 +17,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
@@ -40,7 +40,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHost
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -57,12 +56,13 @@ import net.felipealafy.orgs.ui.theme.LightGray
 import net.felipealafy.orgs.ui.theme.OrgsTypography
 import net.felipealafy.orgs.ui.theme.Red
 import net.felipealafy.orgs.ui.theme.White
+import android.util.Log
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductsView(
-    navController: NavHostController = rememberNavController(),
-    viewModel: OrgsViewModel,
+    navController: NavHostController,
+    viewModel: OrgsViewModel
 ) {
     val productsList by viewModel.productsList.collectAsState()
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -116,28 +116,32 @@ fun ProductsView(
                     modifier = Modifier.padding(8.dp)
                 ) {
                     items(productsList) { product ->
-                        SwipeActionsForProductCard(product, swipeActions = {
-                            swipeAction -> viewModel.swipeActions(
-                                product,
-                                swipeAction,
-                                navController
-                            )
-                        })
+                        SwipeActionsForProductCard(
+                            product,
+                            swipeActions = { swipeAction ->
+                                viewModel.swipeActions(product, swipeAction, navController)
+                            },
+                            onClick = {
+                                Log.d("DEBUG_ORGS", "1. Card Clicado. Produto: '${product.name}'")
+                                viewModel.selectProduct(product)
+                                navController.navigate(Views.Detailed.name)
+                            }
+                        )
                     }
                 }
             }
-            composable(route = Views.Register.name) {
-                RegisterView(
-                    navController= navController,
-                    viewModel = viewModel
-                )
+            composable(Views.Register.name) {
+                RegisterView(navController, viewModel)
+            }
+            composable(Views.Detailed.name) {
+                DetailedView(viewModel)
             }
         }
     }
 }
 
 @Composable
-fun SwipeActionsForProductCard(product: Product, swipeActions: (SwipeToDismissBoxValue) -> Boolean) {
+fun SwipeActionsForProductCard(product: Product, swipeActions: (SwipeToDismissBoxValue) -> Boolean, onClick: () -> Unit) {
 
     val swipeToDismissBoxState = rememberSwipeToDismissBoxState(
         confirmValueChange = swipeActions
@@ -176,20 +180,21 @@ fun SwipeActionsForProductCard(product: Product, swipeActions: (SwipeToDismissBo
             }
         }
     ) {
-        ProductCard(product)
+        ProductCard(product, onClick)
     }
 }
 
 @Composable
-fun ProductCard(product: Product) {
+fun ProductCard(product: Product, onClick: () -> Unit) {
     Card (
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
-            .height(150.dp),
+            .height(150.dp)
+            .clickable { onClick() },
         shape = RoundedCornerShape(8.dp),
         elevation = CardDefaults.cardElevation(8.dp),
-        colors = CardDefaults.cardColors(containerColor = White)
+        colors = CardDefaults.cardColors(containerColor = White),
     ) {
         Row {
             ProductView(product)
